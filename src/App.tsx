@@ -17,6 +17,7 @@ function App() {
   const [hasSearched, setHasSearched] = useState(false);
   const [results, setResults] = useState<Flight[]>([]);
   const [sortOption, setSortOption] = useState<SortOption>('best');
+  const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,8 +62,63 @@ function App() {
     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(amount * passengers);
   };
 
+  const getScoreClass = (score: number) => {
+    if (score >= 80) return 'score-high';
+    if (score >= 50) return 'score-medium';
+    return 'score-low';
+  };
+
   return (
     <div className="min-h-screen">
+      {/* Booking Summary Modal */}
+      {selectedFlight && (
+        <div className="modal-overlay" onClick={() => setSelectedFlight(null)}>
+          <div className="booking-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="summary-header">
+              <h2 className="text-2xl mb-2">Flug-Zusammenfassung</h2>
+              <p className="text-muted">AeroSearch Premium Buchungsdetails</p>
+            </div>
+            
+            <div className="summary-grid">
+              <div className="summary-item">
+                <label>Fluglinie</label>
+                <p>{selectedFlight.airline}</p>
+              </div>
+              <div className="summary-item">
+                <label>Klasse</label>
+                <p>{flightClass.replace('_', ' ')}</p>
+              </div>
+              <div className="summary-item">
+                <label>Abflug</label>
+                <p>{selectedFlight.departureTime} ({selectedFlight.departureAirport})</p>
+              </div>
+              <div className="summary-item">
+                <label>Ankunft</label>
+                <p>{selectedFlight.arrivalTime} ({selectedFlight.arrivalAirport})</p>
+              </div>
+              <div className="summary-item">
+                <label>Dauer</label>
+                <p>{formatDuration(selectedFlight.durationMinutes)}</p>
+              </div>
+              <div className="summary-item">
+                <label>Zwischenstopps</label>
+                <p>{selectedFlight.stops === 0 ? 'Direktflug' : `${selectedFlight.stops} Stopp(s)`}</p>
+              </div>
+            </div>
+
+            <div className="total-price-row">
+              <div className="text-muted">{passengers} {passengers > 1 ? 'Personen' : 'Person'} Gesamtpreis:</div>
+              <div className="text-2xl font-bold text-primary-color">{formatCurrency(selectedFlight.prices[flightClass])}</div>
+            </div>
+
+            <div className="flex gap-4">
+              <button className="btn btn-secondary w-full" onClick={() => setSelectedFlight(null)}>Schließen</button>
+              <button className="btn btn-primary w-full" onClick={() => { alert('Danke für dein Interesse! Dies ist eine Demo.'); setSelectedFlight(null); }}>Jetzt buchen</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="hero-gradient text-center">
         <div className="container">
           <h1 className="text-2xl mb-4" style={{ fontSize: '2.5rem', fontWeight: 800 }}>AeroSearch Premium</h1>
@@ -241,6 +297,12 @@ function App() {
 
                   {/* Pricing & Selection */}
                   <div className="flex flex-col items-end gap-2" style={{ flex: 1, borderLeft: '1px solid var(--border-color)', paddingLeft: '1.5rem', marginLeft: '1.5rem' }}>
+                    {flight.bestValueScore && (
+                      <div className={`score-badge ${getScoreClass(flight.bestValueScore)}`}>
+                        Score: {flight.bestValueScore}
+                      </div>
+                    )}
+                    
                     <div className="text-xs text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       {flightClass.replace('_', ' ')} • {passengers} {passengers > 1 ? 'Personen' : 'Person'}
                     </div>
@@ -248,15 +310,13 @@ function App() {
                       {formatCurrency(flight.prices[flightClass])}
                     </div>
                     
-                    <button className="btn btn-primary w-full mt-2" style={{ padding: '0.5rem' }}>
+                    <button 
+                      className="btn btn-primary w-full mt-2" 
+                      style={{ padding: '0.5rem' }}
+                      onClick={() => setSelectedFlight(flight)}
+                    >
                       Auswählen
                     </button>
-                    
-                    {sortOption === 'best' && flight.bestValueScore && (
-                      <div className="text-xs mt-1" style={{ color: flight.bestValueScore > 85 ? '#10b981' : 'var(--text-secondary)' }}>
-                        Best Value Score: {flight.bestValueScore} / 100
-                      </div>
-                    )}
                   </div>
 
                 </div>
