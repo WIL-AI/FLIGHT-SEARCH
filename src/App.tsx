@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import './index.css';
-import { searchMockFlights, Flight } from './mockData';
+import { searchMockFlights, type Flight } from './mockData';
 
 type SortOption = 'best' | 'cheapest' | 'fastest';
 type FlightClass = 'economy' | 'economy_plus' | 'business';
